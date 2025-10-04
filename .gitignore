@@ -8,3 +8,7 @@ tasks.md
 # ENV
 .env
 *.env
+
+# MODULES
+node_modules/
+**/node_modules/
