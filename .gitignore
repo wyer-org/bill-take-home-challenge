@@ -4,3 +4,7 @@ tasks.md
 
 # VSCODE
 .vscode
+
+# ENV
+.env
+*.env
