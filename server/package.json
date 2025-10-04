@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@elysiajs/cookie": "^0.8.0",
+    "@elysiajs/cors": "^1.4.0",
     "@prisma/client": "^6.16.3",
     "argon2": "^0.44.0",
     "dotenv": "^17.2.3",
