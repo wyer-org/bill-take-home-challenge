@@ -21,8 +21,3 @@ generator prismabox {
   output      = "../src/db/generated"
 } 
 
-model Test {
-    id      String @id @default(cuid())
-    name    String
-    count   Int
-}
