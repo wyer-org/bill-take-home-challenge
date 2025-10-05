@@ -2,7 +2,12 @@ import { prisma } from "../db/client";
 import { RegisterUserDto } from "../common/types/user";
 import { Cookie } from "elysia/cookies";
 import { User, UserType } from "@prisma/client";
-import { getCurrentTimePlus, Time } from "../utils/timeUtil";
+import {
+    getCurrentTimePlusMinutes,
+    getCurrentTimePlusMonths,
+    Time,
+    isExpired,
+} from "../utils/timeUtil";
 
 export class AuthService {
     async registerUser(user: RegisterUserDto) {
@@ -27,7 +32,7 @@ export class AuthService {
     }
 
     async createUserMagicLink({ userId }: { userId: string }) {
-        const expiresAt = getCurrentTimePlus(Time.FIFTEEN_MINUTES);
+        const expiresAt = getCurrentTimePlusMinutes(Time.FIFTEEN_MINUTES);
 
         const magicLink = await prisma.magicLink.create({
             data: {
@@ -44,7 +49,7 @@ export class AuthService {
     }
 
     async createSession({ userId }: { userId: string }) {
-        const expiresAt = getCurrentTimePlus(Time.THREE_MONTHS);
+        const expiresAt = getCurrentTimePlusMonths(Time.THREE_MONTHS);
 
         const session = await prisma.userSession.create({
             data: {
@@ -64,13 +69,16 @@ export class AuthService {
     }
 
     async validateMagicLink({ token }: { token: string }) {
-        const now = new Date();
         const magicLink = await prisma.magicLink.findUnique({
-            where: { id: token, expiresAt: { gt: now }, isUsed: false },
+            where: { id: token, isUsed: false },
             include: { user: true },
         });
 
         if (!magicLink) return { isValid: false, user: null };
+
+        if (isExpired(magicLink.expiresAt)) {
+            return { isValid: false, user: null };
+        }
 
         await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
@@ -90,6 +98,11 @@ export class AuthService {
         });
 
         if (!session || !session.user) return { user: null };
+
+        if (isExpired(session.expiresAt)) {
+            await prisma.userSession.delete({ where: { id: sid } });
+            return { user: null };
+        }
 
         return { user: session.user };
     }

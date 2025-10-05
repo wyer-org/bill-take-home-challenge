@@ -1,16 +1,18 @@
-import {} from "date-fns";
-export const FIFTEEN_MINUTES_IN_MS = 15 * 60 * 1000;
-export const THREE_MONTHS_IN_MS = 3 * 30 * 24 * 60 * 60 * 1000;
+import { addMinutes, addMonths, isBefore } from "date-fns";
 
 export enum Time {
-    FIFTEEN_MINUTES = FIFTEEN_MINUTES_IN_MS,
-    THREE_MONTHS = THREE_MONTHS_IN_MS,
+    FIFTEEN_MINUTES = 15,
+    THREE_MONTHS = 3,
 }
 
-export function getCurrentTime() {
-    return new Date();
+export function getCurrentTimePlusMinutes(minutes: number) {
+    return addMinutes(new Date(), minutes);
 }
 
-export function getCurrentTimePlus(time: Time) {
-    return new Date(Date.now() + time);
+export function getCurrentTimePlusMonths(months: number) {
+    return addMonths(new Date(), months);
+}
+
+export function isExpired(date: Date) {
+    return isBefore(date, new Date());
 }
