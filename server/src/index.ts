@@ -2,8 +2,8 @@ import { Elysia } from "elysia";
 import { openapi } from "@elysiajs/openapi";
 import { cookie } from "@elysiajs/cookie";
 import * as z from "zod";
-import { prisma } from "./db/client";
 import { cors } from "@elysiajs/cors";
+import { authPlugin } from "./auth/authPlugin";
 
 const app = new Elysia({ prefix: "api/v1" })
     .use(cookie())
@@ -13,7 +13,7 @@ const app = new Elysia({ prefix: "api/v1" })
             mapJsonSchema: { zod: z.toJSONSchema },
         })
     )
-    .get("/", () => "Hello Elysia")
+    .use(authPlugin)
     .listen(3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

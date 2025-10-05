@@ -13,11 +13,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator prismabox { 
-  provider = "prismabox"
-  typeboxImportDependencyName = "elysia"
-  typeboxImportVariableName = "t"
-  inputModel = true
-  output      = "../src/db/generated"
-} 
 
+enum UserType {
+  ADMIN
+  USER
+}
+
+model User {
+  id            String  @id @default(uuid())
+  email         String  @unique
+  name          String?
+
+  isVerified    Boolean @default(false) // todo: note: ensure only admin can verify a user
+  userType      UserType @default(USER)
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+
+  magicLinks    MagicLink[]
+  userSession   UserSession[]
+}
+
+model MagicLink {
+  id          String @id @default(uuid())
+  userId      String
+  
+  expiresAt   DateTime
+  isUsed      Boolean @default(false)
+
+  user        User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model UserSession {
+    id          String  @id @default(uuid())
+    userId      String
+    expiresAt   DateTime
+
+    user        User @relation(fields: [userId], references: [id])
+
+    @@index([userId])
+}
