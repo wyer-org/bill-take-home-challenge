@@ -1,6 +1,5 @@
 import { prisma } from "../db/client";
 import { RegisterUserDto } from "../common/types/user";
-import { Cookie } from "elysia/cookies";
 import { User, UserType } from "@prisma/client";
 import {
     getCurrentTimePlusMinutes,
@@ -83,28 +82,6 @@ export class AuthService {
         await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
         return { isValid: true, user: magicLink.user };
-    }
-
-    async resolveUserFromCookie(cookie: Record<string, Cookie<unknown>> & Record<string, string>) {
-        const sid = cookie.session.value as string;
-
-        if (!sid) return { user: null };
-
-        const session = await prisma.userSession.findUnique({
-            where: { id: sid },
-            include: {
-                user: true,
-            },
-        });
-
-        if (!session || !session.user) return { user: null };
-
-        if (isExpired(session.expiresAt)) {
-            await prisma.userSession.delete({ where: { id: sid } });
-            return { user: null };
-        }
-
-        return { user: session.user };
     }
 
     async validateIsUserAdmin(user: User) {

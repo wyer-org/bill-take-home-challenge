@@ -19,6 +19,19 @@ enum UserType {
   USER
 }
 
+enum Module {
+  VAULT
+  FINANCIALS
+  REPORTING
+}
+
+enum Action {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+}
+
 model User {
   id            String  @id @default(uuid())
   email         String  @unique
@@ -33,6 +46,46 @@ model User {
 
   magicLinks    MagicLink[]
   userSession   UserSession[]
+
+  tenantId      String?
+  tenant        Tenant? @relation(fields: [tenantId], references: [id])
+
+  
+  teamId        String?
+  team          Team? @relation(fields: [teamId], references: [id])
+
+  @@index([tenantId])
+  @@index([teamId])
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+
+  teams Team[]
+  users User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@unique([name])
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  users  User[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
 }
 
 model MagicLink {

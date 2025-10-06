@@ -3,13 +3,14 @@ import { cookie } from "@elysiajs/cookie";
 import { LoginUser, RegisterUser, TokenQueryParams, VerifyUser } from "../common/types/user";
 import { AuthService } from "./authService";
 import { UserService } from "../user/userService";
+import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 
 const authService = new AuthService();
 const userService = new UserService();
 
 export const authPlugin = new Elysia({ prefix: "/auth" })
     .use(cookie())
-    .derive(async ({ cookie }) => authService.resolveUserFromCookie(cookie))
+    .derive(async ({ cookie }) => userFromCookieMiddleware(cookie))
     .post(
         "/register",
         async ({ body, status }) => {
