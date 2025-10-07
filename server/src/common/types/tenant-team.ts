@@ -29,3 +29,42 @@ export type GetTeamsByTenantDto = {
     tenantId: string;
     currentUser: User;
 };
+
+export const GetTeamsByTentantParams = z.object({
+    tenantId: z.string(),
+});
+
+export const AssignUserToTenant = z.object({
+    userId: z.string(),
+    tenantId: z.string(),
+});
+
+export type AssignUserToTenantDto = {
+    userId: string;
+    tenantId: string;
+    assignedBy: User;
+};
+
+export const RemoveUserFromTenant = z.object({
+    userId: z.string(),
+    tenantId: z.string(),
+});
+
+export type RemoveUserFromTenantDto = {
+    userId: string;
+    tenantId: string;
+    removedBy: User;
+};
+
+export const DeleteTenant = z.object({
+    tenantId: z.string(),
+});
+
+export type DeleteTenantDto = {
+    tenantId: string;
+    deletedBy: User;
+};
+
+export type GetTenantsByCurrentUserDto = {
+    currentUser: User;
+};

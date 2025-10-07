@@ -46,6 +46,7 @@ model User {
 
   magicLinks    MagicLink[]
   userSession   UserSession[]
+  userGroups    UserGroup[] 
 
   tenantId      String?
   tenant        Tenant? @relation(fields: [tenantId], references: [id])
@@ -80,7 +81,8 @@ model Team {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   users  User[]
-  
+  groups Group[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -108,4 +110,76 @@ model UserSession {
     user        User @relation(fields: [userId], references: [id])
 
     @@index([userId])
+}
+
+model Group {
+  id          String   @id @default(uuid())
+  name        String
+  teamId      String
+  
+  userGroups     UserGroup[]
+  groupRoles     GroupRole[]
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([teamId, name])
+  @@index([teamId])
+}
+
+
+model UserGroup {
+  id      String @id @default(uuid())
+  userId  String
+  groupId String
+  
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  
+  rolePermissions RolePermission[]
+  groupRoles  GroupRole[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model GroupRole {
+  id      String @id @default(uuid())
+  groupId String
+  roleId  String
+  
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  role    Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([groupId, roleId])
+  @@index([groupId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+
+  module       Module
+  action       Action
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  
+  @@unique([roleId, module, action])
+  @@index([module, action])
 }

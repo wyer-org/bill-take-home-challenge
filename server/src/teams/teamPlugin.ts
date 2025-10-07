@@ -2,11 +2,11 @@ import cookie from "@elysiajs/cookie";
 import Elysia from "elysia";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 import { TeamService } from "./teamService";
-import { CreateTeam } from "../common/types/tenant-team";
-import z from "zod";
+import { CreateTeam, GetTeamsByTentantParams } from "../common/types/tenant-team";
 
 const teamService = new TeamService();
 
+// todo add update and delete team
 export const teamPlugin = new Elysia({ prefix: "/team" })
     .use(cookie())
     .derive(async ({ cookie }) => userFromCookieMiddleware(cookie))
@@ -19,7 +19,7 @@ export const teamPlugin = new Elysia({ prefix: "/team" })
                 const team = await teamService.createTeam({ ...body, createdBy: user });
 
                 return status(201, { message: "Team created successfully", data: team });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, { message: error.message });
             }
         },
@@ -39,13 +39,11 @@ export const teamPlugin = new Elysia({ prefix: "/team" })
                 });
 
                 return status(200, { data: teams });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, { message: error.message });
             }
         },
         {
-            params: z.object({
-                tenantId: z.string(),
-            }),
+            params: GetTeamsByTentantParams,
         }
     );

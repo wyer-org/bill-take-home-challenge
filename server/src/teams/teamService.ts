@@ -1,20 +1,16 @@
 import { CreateTeamDto, GetTeamsByTenantDto } from "../common/types/tenant-team";
-import { UserType } from "@prisma/client";
 import { prisma } from "../db/client";
+import { assertAdminAndTenant } from "../guards/assertAdminAndTenant";
+import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
+// todo add update and delete team
 export class TeamService {
     async createTeam(data: CreateTeamDto) {
         const { name, tenantId, createdBy } = data;
 
-        // todo: user must be verified => move to a middleware-ish
-        if (!createdBy.isVerified) {
-            throw new Error("User is not verified");
-        }
+        assertUserIsVerified({ user: createdBy });
 
-        // todo: another middleware
-        if (createdBy.userType !== UserType.ADMIN || createdBy.tenantId !== tenantId) {
-            throw new Error("Unauthorized: Most be admin or belong to same tenant/organisation");
-        }
+        assertAdminAndTenant({ tenantId, user: createdBy });
 
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
@@ -32,20 +28,5 @@ export class TeamService {
         });
 
         return team;
-    }
-
-    async getTeamsByTenant(data: GetTeamsByTenantDto) {
-        const { currentUser, tenantId } = data;
-
-        if (currentUser.userType !== "ADMIN" && currentUser.tenantId !== tenantId) {
-            throw new Error("Unauthorized: Cannot view another tenant's teams");
-        }
-
-        const teams = prisma.team.findMany({
-            where: { tenantId },
-            orderBy: { createdAt: "desc" },
-        });
-
-        return teams;
     }
 }
