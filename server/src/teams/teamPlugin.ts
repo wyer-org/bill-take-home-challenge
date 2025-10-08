@@ -33,7 +33,7 @@ export const teamPlugin = new Elysia({ prefix: "/team" })
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
-                const teams = await teamService.getTeamsByTenant({
+                const teams = await teamService.getTeamsForTenant({
                     tenantId: params.tenantId,
                     currentUser: user,
                 });

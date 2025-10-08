@@ -7,7 +7,7 @@ import {
     RemoveUserFromTenantDto,
 } from "../common/types/tenant-team";
 import { Tenant, UserType } from "@prisma/client";
-import { assertAdmin, assertAdminAndTenant } from "../guards/assertAdminAndTenant";
+import { assertAdmin, assertAdminAndTenant } from "../guards/assertions";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
 // todo add update and delete tenant

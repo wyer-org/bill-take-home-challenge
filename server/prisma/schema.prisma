@@ -171,15 +171,35 @@ model GroupRole {
   @@index([roleId])
 }
 
+model Permission {
+  id          String @id @default(uuid())
+  module      Module
+  action      Action
+  name        String
+  description String?
+
+  rolePermissions RolePermission[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([module, action])
+}
+
 model RolePermission {
   id           String @id @default(uuid())
   roleId       String
-
-  module       Module
-  action       Action
+  permissionId String
   
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   
-  @@unique([roleId, module, action])
-  @@index([module, action])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
 }
+
+

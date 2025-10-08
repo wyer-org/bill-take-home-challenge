@@ -7,6 +7,9 @@ import { authPlugin } from "./auth/authPlugin";
 import { userPlugin } from "./user/userPlugin";
 import { teamPlugin } from "./teams/teamPlugin";
 import { tenantPlugin } from "./tenants/tenantPlugin";
+import { groupPlugin } from "./group/groupPlugin";
+import { rolePlugin } from "./role/rolePlugin";
+import { permissionPlugin } from "./permissions/permissionPlugin";
 
 const app = new Elysia({ prefix: "api/v1" })
     .use(cookie())
@@ -20,6 +23,9 @@ const app = new Elysia({ prefix: "api/v1" })
     .use(userPlugin)
     .use(teamPlugin)
     .use(tenantPlugin)
+    .use(groupPlugin)
+    .use(rolePlugin)
+    .use(permissionPlugin)
     .listen(3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

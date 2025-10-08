@@ -68,3 +68,12 @@ export type DeleteTenantDto = {
 export type GetTenantsByCurrentUserDto = {
     currentUser: User;
 };
+
+export const GetTeamsForTenant = z.object({
+    tenantId: z.string(),
+});
+
+export type GetTeamsForTenantDto = {
+    tenantId: string;
+    currentUser: User;
+};
