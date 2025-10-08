@@ -24,8 +24,8 @@ const app = new Elysia({ prefix: "api/v1" })
     .use(teamPlugin)
     .use(tenantPlugin)
     .use(groupPlugin)
-    .use(rolePlugin)
     .use(permissionPlugin)
+    .use(rolePlugin)
     .listen(3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

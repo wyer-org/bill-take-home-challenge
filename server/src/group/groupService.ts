@@ -1,5 +1,5 @@
 import { prisma } from "../db/client";
-import { assertAdmin, assertAdminOrTeamMember } from "../guards/assertions";
+import { assertAdminOrTeamMember } from "../guards/assertions";
 import {
     CreateGroupDto,
     UpdateGroupDto,
@@ -11,7 +11,7 @@ import {
     GroupWithMembers,
     GetGroupRolesDto,
 } from "../common/types/group";
-import { User } from "@prisma/client";
+import { Team, User } from "@prisma/client";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
 export class GroupService {
@@ -318,6 +318,23 @@ export class GroupService {
         });
 
         return roles;
+    }
+
+    async getUserGroups(currentUser: User) {
+        assertUserIsVerified({ user: currentUser });
+        console.log("currentUser", currentUser);
+
+        const groups = await prisma.userGroup
+            .findMany({
+                where: { userId: currentUser.id },
+                select: {
+                    group: true,
+                },
+                orderBy: { group: { createdAt: "desc" } },
+            })
+            .then((userGroups) => userGroups.map((userGroup) => userGroup.group));
+
+        return groups;
     }
 
     private async assertCanManageTeamGroups(user: User, teamId: string) {

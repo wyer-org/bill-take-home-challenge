@@ -32,7 +32,11 @@ export function assertAdminOrTeamMember({ user, teamId }: { user: User; teamId: 
     throw new Error("Unauthorized: Must be admin or team member");
 }
 
-export async function assertCanManageTeamGroups(user: User, teamId: string) {
+export async function assertCanManageTeamGroups(user: User, teamId?: string) {
+    if (!teamId) {
+        throw new Error("Team ID is required");
+    }
+
     assertAdminOrTeamMember({ user, teamId });
 
     const team = await prisma.team.findUnique({

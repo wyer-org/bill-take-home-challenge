@@ -36,6 +36,20 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             body: CreateGroup,
         }
     )
+    // get user groups
+    .get("/user", async ({ user, status }) => {
+        try {
+            if (!user) return status(401, { message: "Unauthorized" });
+
+            const groups = await groupService.getUserGroups(user);
+
+            return status(200, { message: "User groups fetched successfully", data: groups });
+        } catch (error: any) {
+            return status(400, {
+                message: error.message ?? "An error occurred",
+            });
+        }
+    })
     // update a group
     .put(
         "/:groupId",
