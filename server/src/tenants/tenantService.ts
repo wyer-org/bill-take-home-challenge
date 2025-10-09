@@ -5,8 +5,9 @@ import {
     DeleteTenantDto,
     GetTenantsByCurrentUserDto,
     RemoveUserFromTenantDto,
+    UpdateTenantDto,
 } from "../common/types/tenant-team";
-import { Tenant, UserType } from "@prisma/client";
+import { Tenant, User, UserType } from "@prisma/client";
 import { assertAdmin, assertAdminAndTenant } from "../guards/assertions";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
@@ -122,5 +123,113 @@ export class TenantService {
         }
 
         return tenants;
+    }
+
+    // todo: refine this, for now just testing to get all possible information for a tenant
+    async getTenantById(tenantId: string, currentUser: User) {
+        assertUserIsVerified({ user: currentUser });
+
+        assertAdminAndTenant({ tenantId, user: currentUser });
+
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            include: {
+                users: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        isVerified: true,
+                        userType: true,
+                        createdAt: true,
+                    },
+                },
+                teams: {
+                    include: {
+                        users: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                        groups: {
+                            include: {
+                                userGroups: {
+                                    include: {
+                                        user: {
+                                            select: {
+                                                id: true,
+                                                name: true,
+                                                email: true,
+                                            },
+                                        },
+                                    },
+                                },
+                                groupRoles: {
+                                    include: {
+                                        role: {
+                                            include: {
+                                                rolePermissions: {
+                                                    include: {
+                                                        permission: true,
+                                                    },
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!tenant) {
+            throw new Error("Tenant not found");
+        }
+
+        return tenant;
+    }
+
+    async updateTenant(data: { tenantId: string; name?: string; updatedBy: User }) {
+        const { tenantId, name, updatedBy } = data;
+
+        assertUserIsVerified({ user: updatedBy });
+
+        if (updatedBy.userType !== UserType.ADMIN) {
+            throw new Error("Unauthorized: Only admins can update tenants");
+        }
+
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+        });
+
+        if (!tenant) {
+            throw new Error("Tenant not found");
+        }
+
+        if (name && name !== tenant.name) {
+            const existingTenant = await prisma.tenant.findFirst({
+                where: {
+                    name,
+                    id: { not: tenantId },
+                },
+            });
+
+            if (existingTenant) {
+                throw new Error("Tenant name already exists");
+            }
+        }
+
+        const updatedTenant = await prisma.tenant.update({
+            where: { id: tenantId },
+            data: {
+                ...(name && { name }),
+            },
+        });
+
+        return updatedTenant;
     }
 }

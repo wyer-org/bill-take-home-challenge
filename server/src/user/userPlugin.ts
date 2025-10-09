@@ -8,10 +8,11 @@ const userService = new UserService();
 export const userPlugin = new Elysia({ prefix: "/user" })
     .use(cookie())
     .derive(async ({ cookie }) => userFromCookieMiddleware(cookie))
-    .get("/me", async ({ user, status }) => {
+    // Get logged in user profile
+    .get("/profile", async ({ user, status }) => {
         if (!user) return status(401, { message: "Unauthorized" });
 
-        const loggedInUser = await userService.getLoggedInUser({ user });
+        const loggedInUser = await userService.getUserProfile({ user });
 
         if (!loggedInUser) return status(404, { message: "User not found" });
 

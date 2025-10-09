@@ -11,6 +11,7 @@ const userService = new UserService();
 export const authPlugin = new Elysia({ prefix: "/auth" })
     .use(cookie())
     .derive(async ({ cookie }) => userFromCookieMiddleware(cookie))
+    // Register a new user
     .post(
         "/register",
         async ({ body, status }) => {
@@ -36,6 +37,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         },
         { body: RegisterUser }
     )
+    // Initialte magic link for user login
     .post(
         "/login/init",
         async ({ body, status }) => {
@@ -58,6 +60,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         },
         { body: LoginUser }
     )
+    // Validate magic link and login user
     .post(
         "/login",
         async ({ query: { token }, cookie, status }) => {
@@ -79,6 +82,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         },
         { query: TokenQueryParams }
     )
+    // Logout user
     .post("/logout", async ({ cookie }) => {
         const sid = cookie.session.value as string;
         if (sid) await authService.removeSession({ sessionId: sid });
@@ -90,6 +94,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
             message: "Logout successfully",
         };
     })
+    // Verify user by admin
     .post(
         "/verify-user",
         async ({ user, status, body }) => {

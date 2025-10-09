@@ -77,3 +77,13 @@ export type GetTeamsForTenantDto = {
     tenantId: string;
     currentUser: User;
 };
+
+export const UpdateTenant = z.object({
+    id: z.string(),
+    name: z.string(),
+});
+
+export type UpdateTenantDto = {
+    id: string;
+    name: string;
+};

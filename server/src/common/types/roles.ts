@@ -53,3 +53,49 @@ export type AssignRoleToGroupDto = {
     roleId: string;
     assignedBy: User;
 };
+
+export const UpdateRole = z.object({
+    roleId: z.string().min(1, "Role ID is required"),
+    name: z.string().min(1, "Role name is required"),
+    description: z.string().optional(),
+    permissionsIds: z.array(z.uuid()).min(1, "At least one permission is required"),
+});
+
+export type UpdateRoleDto = {
+    roleId: string;
+    name: string;
+    description: string;
+    permissionsIds: string[];
+    updatedBy: User;
+};
+
+export const AddPermissionsToRole = z.object({
+    roleId: z.string().min(1, "Role ID is required"),
+    permissionIds: z.array(z.uuid()).min(1, "At least one permission is required"),
+});
+
+export type AddPermissionsToRoleDto = {
+    roleId: string;
+    permissionIds: string[];
+    addedBy: User;
+};
+
+export const RemovePermissionsFromRole = z.object({
+    roleId: z.string().min(1, "Role ID is required"),
+    permissionIds: z.array(z.uuid()).min(1, "At least one permission is required"),
+});
+
+export type RemovePermissionsFromRoleDto = {
+    roleId: string;
+    permissionIds: string[];
+    removedBy: User;
+};
+
+export const DeleteRole = z.object({
+    roleId: z.string().min(1, "Role ID is required"),
+});
+
+export type DeleteRoleDto = {
+    roleId: string;
+    deletedBy: User;
+};

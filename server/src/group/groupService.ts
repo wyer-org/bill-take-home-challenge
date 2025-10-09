@@ -247,20 +247,12 @@ export class GroupService {
         // Check if user has access to view team members
         assertAdminOrTeamMember({ user: currentUser, teamId: group.teamId });
 
-        const groupMembers = await prisma.userGroup.findMany({
-            where: { groupId },
-            include: {
-                user: true,
-            },
-            orderBy: { user: { createdAt: "desc" } },
-        });
-
-        const members = await prisma.user.findMany({
+        const groupMembers = await prisma.user.findMany({
             where: { userGroups: { some: { groupId } } },
             orderBy: { createdAt: "desc" },
         });
 
-        return { group, members };
+        return { group, members: groupMembers };
     }
 
     async deleteGroup(data: DeleteGroupDto) {
@@ -335,6 +327,11 @@ export class GroupService {
             .then((userGroups) => userGroups.map((userGroup) => userGroup.group));
 
         return groups;
+    }
+
+    // read group by id
+    async getGroupById({ groupId, currentUser }: { groupId: string; currentUser: User }) {
+        // Get group with members, roles, and permissions
     }
 
     private async assertCanManageTeamGroups(user: User, teamId: string) {
