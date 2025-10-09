@@ -135,3 +135,12 @@ export type GroupWithDetails = {
         };
     }>;
 };
+
+export const GroupIdParams = z.object({
+    groupId: z.string(),
+});
+
+export const GroupUserIdParams = z.object({
+    groupId: z.string(),
+    userId: z.string(),
+});

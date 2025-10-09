@@ -63,9 +63,8 @@ export const UpdateRole = z.object({
 
 export type UpdateRoleDto = {
     roleId: string;
-    name: string;
-    description: string;
-    permissionsIds: string[];
+    name?: string;
+    description?: string;
     updatedBy: User;
 };
 

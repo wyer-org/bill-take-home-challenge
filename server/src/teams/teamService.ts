@@ -1,9 +1,5 @@
 import { User } from "@prisma/client";
-import {
-    CreateTeamDto,
-    GetTeamsByTenantDto,
-    GetTeamsForTenantDto,
-} from "../common/types/tenant-team";
+import { CreateTeamDto, DeleteTeamDto, GetTeamsForTenantDto } from "../common/types/tenant-team";
 import { prisma } from "../db/client";
 import { assertAdminAndTenant, assertAdminOrTeamMember } from "../guards/assertions";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
@@ -131,7 +127,7 @@ export class TeamService {
         return updatedTeam;
     }
 
-    async deleteTeam(data: { teamId: string; deletedBy: User }) {
+    async deleteTeam(data: DeleteTeamDto) {
         const { teamId, deletedBy } = data;
 
         assertUserIsVerified({ user: deletedBy });

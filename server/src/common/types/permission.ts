@@ -28,7 +28,11 @@ export const UpdatePermission = z.object({
 
 export type UpdatePermissionDto = {
     permissionId: string;
-    name: string;
-    description: string;
+    name?: string;
+    description?: string;
     updatedBy: User;
 };
+
+export const PermissionIdParams = z.object({
+    permissionId: z.string(),
+});

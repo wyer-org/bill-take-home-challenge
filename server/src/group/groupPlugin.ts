@@ -3,7 +3,15 @@ import Elysia from "elysia";
 import { z } from "zod";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 import { GroupService } from "./groupService";
-import { CreateGroup, UpdateGroup, AddUserToGroup, GetGroupRoles } from "../common/types/group";
+import {
+    CreateGroup,
+    UpdateGroup,
+    AddUserToGroup,
+    GetGroupRoles,
+    GroupIdParams,
+    GroupUserIdParams,
+} from "../common/types/group";
+import { TeamIdParams } from "../common/types/tenant-team";
 
 const groupService = new GroupService();
 
@@ -26,9 +34,9 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                     message: "Group created successfully",
                     data: group,
                 });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
@@ -67,14 +75,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                     message: "Group updated successfully",
                     data: group,
                 });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({ groupId: z.string() }),
+            params: GroupIdParams,
             body: UpdateGroup,
         }
     )
@@ -91,14 +99,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                 });
 
                 return status(200, { data: groups });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({ teamId: z.string() }),
+            params: TeamIdParams,
         }
     )
     // add a user to a group
@@ -118,14 +126,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                     message: "User added to group successfully",
                     data: userGroup,
                 });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({ groupId: z.string() }),
+            params: GroupIdParams,
             body: AddUserToGroup,
         }
     )
@@ -145,17 +153,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                 return status(200, {
                     message: "User removed from group successfully",
                 });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({
-                groupId: z.string(),
-                userId: z.string(),
-            }),
+            params: GroupUserIdParams,
         }
     )
     // get all members of a group
@@ -171,14 +176,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                 });
 
                 return status(200, { data: members });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({ groupId: z.string() }),
+            params: GroupIdParams,
         }
     )
     // get all roles of a group
@@ -221,13 +226,13 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
                     message: result.message,
                     data: result,
                 });
-            } catch (error) {
+            } catch (error: any) {
                 return status(400, {
-                    message: error instanceof Error ? error.message : "An error occurred",
+                    message: error.message ?? "An error occurred",
                 });
             }
         },
         {
-            params: z.object({ groupId: z.string() }),
+            params: GroupIdParams,
         }
     );

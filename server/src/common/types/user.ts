@@ -29,7 +29,7 @@ export const UpdateUserProfile = z.object({
 
 export type UpdateUserProfileDto = {
     userId: string;
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     updatedBy: User;
 };
