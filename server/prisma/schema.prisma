@@ -47,6 +47,9 @@ model User {
   magicLinks    MagicLink[]
   userSession   UserSession[]
   userGroups    UserGroup[] 
+  vaults Vault[]
+  transactions Transaction[]
+  reports Report[]
 
   tenantId      String?
   tenant        Tenant? @relation(fields: [tenantId], references: [id])
@@ -65,6 +68,9 @@ model Tenant {
 
   teams Team[]
   users User[]
+  vaults Vault[]
+  transactions Transaction[]
+  reports Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,6 +88,9 @@ model Team {
 
   users  User[]
   groups Group[]
+  vaults Vault[]
+  transactions Transaction[]
+  reports Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -202,6 +211,69 @@ model RolePermission {
   @@unique([roleId, permissionId])
   @@index([roleId])
   @@index([permissionId])
+}
+
+model Vault {
+  id        String   @id @default(uuid())
+  name      String
+  value     String   
+
+  tenantId  String
+  teamId    String
+  userId    String
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([teamId])
+  @@index([tenantId, teamId])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  amount      Decimal  @db.Decimal(20, 4)
+  description String
+
+  tenantId    String
+  teamId      String
+  userId      String
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([teamId])
+  @@index([tenantId, teamId])
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+
+  tenantId  String
+  teamId    String
+  userId    String
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([teamId])
+  @@index([tenantId, teamId])
 }
 
 
