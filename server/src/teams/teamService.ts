@@ -1,9 +1,17 @@
 import { User } from "@prisma/client";
-import { CreateTeamDto, DeleteTeamDto, GetTeamsForTenantDto } from "../common/types/tenant-team";
+import {
+    AssignUserToTeamDto,
+    CreateTeamDto,
+    DeleteTeamDto,
+    GetTeamsForTenantDto,
+} from "../common/types/tenant-team";
 import { prisma } from "../db/client";
-import { assertAdminAndTenant, assertAdminOrTeamMember } from "../guards/assertions";
+import {
+    assertAdminOrTenant,
+    assertAdminOrTeamMember,
+    assertUserIsAdmin,
+} from "../guards/assertions";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
-import { UserType } from "@prisma/client";
 
 // todo add update and delete team
 export class TeamService {
@@ -12,7 +20,7 @@ export class TeamService {
 
         assertUserIsVerified({ user: createdBy });
 
-        assertAdminAndTenant({ tenantId, user: createdBy });
+        assertAdminOrTenant({ tenantId, user: createdBy });
 
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
@@ -29,9 +37,35 @@ export class TeamService {
             },
         });
 
-        await prisma.user.update({ where: { id: createdBy.id }, data: { teamId: team.id } });
+        // only assign user to team created if they do not already belong to a team
+        if (!createdBy.teamId) {
+            await prisma.user.update({ where: { id: createdBy.id }, data: { teamId: team.id } });
+        }
 
         return team;
+    }
+
+    async assignUserToTeam(data: AssignUserToTeamDto) {
+        const { userId, teamId, assignedBy } = data;
+
+        assertUserIsVerified({ user: assignedBy });
+
+        assertAdminOrTeamMember({ user: assignedBy, teamId });
+
+        const team = await prisma.team.findUnique({ where: { id: teamId } });
+
+        if (!team) throw new Error("Team not found");
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) throw new Error("User not found");
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { teamId, tenantId: assignedBy.tenantId },
+        });
+
+        return user;
     }
 
     async getTeamsForTenant(data: GetTeamsForTenantDto) {
@@ -39,9 +73,12 @@ export class TeamService {
 
         assertUserIsVerified({ user: currentUser });
 
-        assertAdminAndTenant({ tenantId, user: currentUser });
+        assertAdminOrTenant({ tenantId, user: currentUser });
 
-        const teams = await prisma.team.findMany({ where: { tenantId } });
+        const teams = await prisma.team.findMany({
+            where: { tenantId },
+            include: { users: true, tenant: true },
+        });
 
         return teams;
     }
@@ -56,28 +93,6 @@ export class TeamService {
             include: {
                 tenant: true,
                 users: true,
-                groups: {
-                    include: {
-                        userGroups: {
-                            include: {
-                                user: true,
-                            },
-                        },
-                        groupRoles: {
-                            include: {
-                                role: {
-                                    include: {
-                                        rolePermissions: {
-                                            include: {
-                                                permission: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
             },
         });
 
@@ -132,9 +147,7 @@ export class TeamService {
 
         assertUserIsVerified({ user: deletedBy });
 
-        if (deletedBy.userType !== UserType.ADMIN) {
-            throw new Error("Unauthorized: Only admins can delete teams");
-        }
+        assertUserIsAdmin({ user: deletedBy });
 
         const team = await prisma.team.findUnique({
             where: { id: teamId },

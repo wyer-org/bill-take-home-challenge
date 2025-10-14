@@ -5,12 +5,12 @@ import {
     UpdatePermissionDto,
 } from "../common/types/permission";
 import { prisma } from "../db/client";
-import { assertAdmin } from "../guards/assertions";
+import { assertUserIsAdmin } from "../guards/assertions";
 
 export class PermissionService {
     async createPermission(data: CreatePermissionDto) {
         const { module, action, createdBy, name, description } = data;
-        assertAdmin(createdBy);
+        assertUserIsAdmin({ user: createdBy });
 
         const existingPermission = await prisma.permission.findFirst({
             where: { module, action },
@@ -37,7 +37,7 @@ export class PermissionService {
 
     async seedAdminPermissions(data: SeedAdminPermissionsDto) {
         const { createdBy } = data;
-        assertAdmin(createdBy);
+        assertUserIsAdmin({ user: createdBy });
 
         const modules = Object.values(Module);
         const actions = Object.values(Action);
@@ -97,9 +97,7 @@ export class PermissionService {
     async updatePermission(data: UpdatePermissionDto) {
         const { permissionId, name, description, updatedBy } = data;
 
-        if (updatedBy.userType !== UserType.ADMIN) {
-            throw new Error("Unauthorized: Only admins can update permissions");
-        }
+        assertUserIsAdmin({ user: updatedBy });
 
         const permission = await prisma.permission.findUnique({
             where: { id: permissionId },
@@ -121,9 +119,7 @@ export class PermissionService {
     }
 
     async deletePermission(permissionId: string, deletedBy: User) {
-        if (deletedBy.userType !== UserType.ADMIN) {
-            throw new Error("Unauthorized: Only admins can delete permissions");
-        }
+        assertUserIsAdmin({ user: deletedBy });
 
         const permission = await prisma.permission.findUnique({
             where: { id: permissionId },

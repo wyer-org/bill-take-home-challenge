@@ -97,14 +97,6 @@ export type GroupWithMembers = {
             email: string;
         };
     }>;
-    groupRoles: Array<{
-        id: string;
-        role: {
-            id: string;
-            name: string;
-            description: string | null;
-        };
-    }>;
 };
 
 export type GroupWithDetails = {

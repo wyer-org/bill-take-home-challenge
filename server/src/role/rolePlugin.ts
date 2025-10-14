@@ -27,6 +27,7 @@ export const rolePlugin = new Elysia({ prefix: "/role" })
         async ({ body, user, status, params }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
+
                 const result = await roleService.createRoleForGroup({
                     ...body,
                     createdBy: user,
@@ -53,6 +54,7 @@ export const rolePlugin = new Elysia({ prefix: "/role" })
         async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
+
                 const roles = await roleService.getRolesByGroup({
                     groupId: params.groupId,
                     currentUser: user,
@@ -144,7 +146,7 @@ export const rolePlugin = new Elysia({ prefix: "/role" })
 
     // Assign role to group
     .post(
-        "/:roleId/group/:groupId",
+        "/:roleId/group/:groupId/assign",
         async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });

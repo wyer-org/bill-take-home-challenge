@@ -127,8 +127,11 @@ model Group {
   teamId      String
   
   userGroups     UserGroup[]
-  groupRoles     GroupRole[]
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupRoles     Role[]        
+  vaults         Vault[]
+  transactions   Transaction[]
+  reports        Report[]
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -155,32 +158,19 @@ model Role {
   id          String   @id @default(uuid())
   name        String
   description String?
+  groupId     String?  
   
   rolePermissions RolePermission[]
-  groupRoles  GroupRole[]
+  group       Group? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([name])
-}
-
-
-model GroupRole {
-  id      String @id @default(uuid())
-  groupId String
-  roleId  String
-  
-  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  role    Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([groupId, roleId])
+  @@unique([name, groupId]) 
   @@index([groupId])
-  @@index([roleId])
 }
+
+
 
 model Permission {
   id          String @id @default(uuid())
@@ -220,10 +210,12 @@ model Vault {
 
   tenantId  String
   teamId    String
+  groupId   String
   userId    String
 
   tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  group     Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -231,6 +223,7 @@ model Vault {
 
   @@index([tenantId])
   @@index([teamId])
+  @@index([groupId])
   @@index([tenantId, teamId])
 }
 
@@ -241,10 +234,12 @@ model Transaction {
 
   tenantId    String
   teamId      String
+  groupId     String
   userId      String
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [userId], references: [id])
 
   createdAt   DateTime @default(now())
@@ -252,6 +247,7 @@ model Transaction {
 
   @@index([tenantId])
   @@index([teamId])
+  @@index([groupId])
   @@index([tenantId, teamId])
 }
 
@@ -262,10 +258,12 @@ model Report {
 
   tenantId  String
   teamId    String
+  groupId   String
   userId    String
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  group  Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
   createdBy User @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
@@ -273,6 +271,7 @@ model Report {
 
   @@index([tenantId])
   @@index([teamId])
+  @@index([groupId])
   @@index([tenantId, teamId])
 }
 

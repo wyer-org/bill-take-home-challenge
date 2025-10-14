@@ -1,5 +1,5 @@
 import { prisma } from "../db/client";
-import { assertAdminOrTeamMember } from "../guards/assertions";
+import { assertAdminOrTeamMember, assertAdminOrTenant } from "../guards/assertions";
 import {
     CreateGroupDto,
     UpdateGroupDto,
@@ -20,7 +20,8 @@ export class GroupService {
         const { name, teamId, createdBy } = data;
 
         assertUserIsVerified({ user: createdBy });
-        await this.assertCanManageTeamGroups(createdBy, teamId);
+
+        assertAdminOrTeamMember({ teamId, user: createdBy });
 
         const team = await prisma.team.findUnique({
             where: { id: teamId },
@@ -68,6 +69,8 @@ export class GroupService {
     async updateGroup(data: UpdateGroupDto) {
         const { groupId, name, updatedBy } = data;
 
+        assertUserIsVerified({ user: updatedBy });
+
         const group = await prisma.group.findUnique({
             where: { id: groupId },
             include: { team: true },
@@ -77,7 +80,7 @@ export class GroupService {
             throw new Error("Group not found");
         }
 
-        await this.assertCanManageTeamGroups(updatedBy, group.teamId);
+        assertAdminOrTeamMember({ user: updatedBy, teamId: group.teamId });
 
         if (name && name !== group.name) {
             const existingGroup = await prisma.group.findFirst({
@@ -106,6 +109,7 @@ export class GroupService {
     async getGroupsByTeam(data: GetGroupsByTeamDto): Promise<GroupWithMembers[]> {
         const { teamId, currentUser } = data;
 
+        assertUserIsVerified({ user: currentUser });
         assertAdminOrTeamMember({ user: currentUser, teamId });
 
         const groups = await prisma.group.findMany({
@@ -122,17 +126,6 @@ export class GroupService {
                         },
                     },
                 },
-                groupRoles: {
-                    include: {
-                        role: {
-                            select: {
-                                id: true,
-                                name: true,
-                                description: true,
-                            },
-                        },
-                    },
-                },
             },
             orderBy: { createdAt: "desc" },
         });
@@ -143,6 +136,8 @@ export class GroupService {
     async addUserToGroup(data: AddUserToGroupDto) {
         const { userId, groupId, addedBy } = data;
 
+        assertUserIsVerified({ user: addedBy });
+
         const group = await prisma.group.findUnique({
             where: { id: groupId },
             include: { team: true },
@@ -152,7 +147,7 @@ export class GroupService {
             throw new Error("Group not found");
         }
 
-        await this.assertCanManageTeamGroups(addedBy, group.teamId);
+        assertAdminOrTeamMember({ user: addedBy, teamId: group.team.id });
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -161,10 +156,6 @@ export class GroupService {
 
         if (!user) {
             throw new Error("User not found");
-        }
-
-        if (user.tenantId !== group.team.tenantId) {
-            throw new Error("User does not belong to the same tenant/organisation as the team");
         }
 
         const existingUserGroup = await prisma.userGroup.findUnique({
@@ -197,6 +188,8 @@ export class GroupService {
     async removeUserFromGroup(data: RemoveUserFromGroupDto) {
         const { userId, groupId, removedBy } = data;
 
+        assertUserIsVerified({ user: removedBy });
+
         const group = await prisma.group.findUnique({
             where: { id: groupId },
             include: { team: true },
@@ -206,7 +199,7 @@ export class GroupService {
             throw new Error("Group not found");
         }
 
-        await this.assertCanManageTeamGroups(removedBy, group.teamId);
+        assertAdminOrTeamMember({ user: removedBy, teamId: group.team.id });
 
         const userGroup = await prisma.userGroup.findUnique({
             where: {
@@ -231,34 +224,11 @@ export class GroupService {
         });
     }
 
-    async getGroupMembers(data: GetGroupMembersDto) {
-        const { groupId, currentUser } = data;
-
-        // Check if group exists and get team info
-        const group = await prisma.group.findUnique({
-            where: { id: groupId },
-            include: { team: true },
-        });
-
-        if (!group) {
-            throw new Error("Group not found");
-        }
-
-        // Check if user has access to view team members
-        assertAdminOrTeamMember({ user: currentUser, teamId: group.teamId });
-
-        const groupMembers = await prisma.user.findMany({
-            where: { userGroups: { some: { groupId } } },
-            orderBy: { createdAt: "desc" },
-        });
-
-        return { group, members: groupMembers };
-    }
-
     async deleteGroup(data: DeleteGroupDto) {
         const { groupId, deletedBy } = data;
 
-        // Check if group exists and get team info
+        assertUserIsVerified({ user: deletedBy });
+
         const group = await prisma.group.findUnique({
             where: { id: groupId },
             include: { team: true },
@@ -268,20 +238,20 @@ export class GroupService {
             throw new Error("Group not found");
         }
 
-        // Check if user has permission to delete this group
-        await this.assertCanManageTeamGroups(deletedBy, group.teamId);
+        assertAdminOrTeamMember({ user: deletedBy, teamId: group.team.id });
 
-        // Delete the group (cascade will handle related records)
         await prisma.group.delete({
             where: { id: groupId },
         });
 
-        return { success: true, message: "Group deleted successfully" };
+        return true;
     }
+
     async getGroupRoles(data: GetGroupRolesDto) {
         const { groupId, currentUser } = data;
 
-        // Check if group exists and get team info
+        assertUserIsVerified({ user: currentUser });
+
         const group = await prisma.group.findUnique({
             where: { id: groupId },
             include: { team: true },
@@ -291,42 +261,14 @@ export class GroupService {
             throw new Error("Group not found");
         }
 
-        // Check if user has access to view team roles
-        assertAdminOrTeamMember({ user: currentUser, teamId: group.teamId });
+        assertAdminOrTeamMember({ user: currentUser, teamId: group.team.id });
 
-        const roles = await prisma.groupRole.findMany({
+        const groupRoles = await prisma.role.findMany({
             where: { groupId },
-            include: {
-                role: {
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                        createdAt: true,
-                    },
-                },
-            },
             orderBy: { createdAt: "desc" },
         });
 
-        return roles;
-    }
-
-    async getUserGroups(currentUser: User) {
-        assertUserIsVerified({ user: currentUser });
-        console.log("currentUser", currentUser);
-
-        const groups = await prisma.userGroup
-            .findMany({
-                where: { userId: currentUser.id },
-                select: {
-                    group: true,
-                },
-                orderBy: { group: { createdAt: "desc" } },
-            })
-            .then((userGroups) => userGroups.map((userGroup) => userGroup.group));
-
-        return groups;
+        return { groupRoles, group };
     }
 
     // read group by id

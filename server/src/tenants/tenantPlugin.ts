@@ -9,6 +9,7 @@ import {
     DeleteTenant,
     TenantIdParams,
     UpdateTenantBody,
+    GetTenantUsersParams,
 } from "../common/types/tenant-team";
 
 const tenantService = new TenantService();
@@ -104,11 +105,13 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
         async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
+
                 const assignedUser = await tenantService.assignUserToTenant({
                     userId: params.userId,
                     tenantId: params.tenantId,
                     assignedBy: user,
                 });
+
                 return status(200, {
                     message: "User assigned to tenant successfully",
                     data: assignedUser,
@@ -119,6 +122,27 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
         },
         {
             params: AssignUserToTenant,
+        }
+    )
+    // Get all users in tenant (admin only)
+    .get(
+        "/users/:tenantId",
+        async ({ params, user, status }) => {
+            try {
+                if (!user) return status(401, { message: "Unauthorized" });
+
+                const result = await tenantService.getTenantUsers({
+                    tenantId: params.tenantId,
+                    currentUser: user,
+                });
+
+                return status(200, { data: result });
+            } catch (error: any) {
+                return status(400, { message: error.message });
+            }
+        },
+        {
+            params: GetTenantUsersParams,
         }
     )
 

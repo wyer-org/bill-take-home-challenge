@@ -12,7 +12,7 @@ export type CreateTenantDto = {
 
 export const CreateTeam = z.object({
     name: z.string().min(1),
-    tenantId: z.string().min(1),
+    tenantId: z.uuid().min(1),
 });
 
 export type CreateTeamDto = {
@@ -22,7 +22,7 @@ export type CreateTeamDto = {
 };
 
 export const GetTeamsByTenant = z.object({
-    tenantId: z.string().min(1),
+    tenantId: z.uuid().min(1),
 });
 
 export type GetTeamsByTenantDto = {
@@ -31,8 +31,8 @@ export type GetTeamsByTenantDto = {
 };
 
 export const AssignUserToTenant = z.object({
-    userId: z.string(),
-    tenantId: z.string(),
+    userId: z.uuid(),
+    tenantId: z.uuid(),
 });
 
 export type AssignUserToTenantDto = {
@@ -42,8 +42,8 @@ export type AssignUserToTenantDto = {
 };
 
 export const RemoveUserFromTenant = z.object({
-    userId: z.string(),
-    tenantId: z.string(),
+    userId: z.uuid(),
+    tenantId: z.uuid(),
 });
 
 export type RemoveUserFromTenantDto = {
@@ -53,7 +53,7 @@ export type RemoveUserFromTenantDto = {
 };
 
 export const DeleteTenant = z.object({
-    tenantId: z.string(),
+    tenantId: z.uuid(),
 });
 
 export type DeleteTenantDto = {
@@ -66,7 +66,7 @@ export type GetTenantsByCurrentUserDto = {
 };
 
 export const GetTeamsForTenant = z.object({
-    tenantId: z.string(),
+    tenantId: z.uuid(),
 });
 
 export type GetTeamsForTenantDto = {
@@ -75,17 +75,12 @@ export type GetTeamsForTenantDto = {
 };
 
 export const UpdateTenant = z.object({
-    id: z.string(),
+    id: z.uuid(),
     name: z.string(),
 });
 
-export type UpdateTenantDto = {
-    id: string;
-    name: string;
-};
-
 export const UpdateTenantBody = z.object({
-    name: z.string().optional(),
+    name: z.string().min(1, { message: "Tenant name is required" }),
 });
 
 export type DeleteTeamDto = {
@@ -94,7 +89,7 @@ export type DeleteTeamDto = {
 };
 
 export const UpdateTeamBody = z.object({
-    name: z.string().optional(),
+    name: z.string().min(1, { message: "Team name is required" }),
 });
 
 export type UpdateTeamDto = {
@@ -104,9 +99,29 @@ export type UpdateTeamDto = {
 };
 
 export const TenantIdParams = z.object({
-    tenantId: z.string(),
+    tenantId: z.uuid(),
 });
 
 export const TeamIdParams = z.object({
-    teamId: z.string(),
+    teamId: z.uuid(),
 });
+
+export const AssignUserToTeam = z.object({
+    userId: z.uuid(),
+    teamId: z.uuid(),
+});
+
+export type AssignUserToTeamDto = {
+    userId: string;
+    teamId: string;
+    assignedBy: User;
+};
+
+export const GetTenantUsersParams = z.object({
+    tenantId: z.uuid(),
+});
+
+export type GetTenantUsersDto = {
+    tenantId: string;
+    currentUser: User;
+};

@@ -4,11 +4,11 @@ import {
     CreateTenantDto,
     DeleteTenantDto,
     GetTenantsByCurrentUserDto,
+    GetTenantUsersDto,
     RemoveUserFromTenantDto,
-    UpdateTenantDto,
 } from "../common/types/tenant-team";
 import { Tenant, User, UserType } from "@prisma/client";
-import { assertAdmin, assertAdminAndTenant } from "../guards/assertions";
+import { assertAdminOrTenant, assertUserIsAdmin } from "../guards/assertions";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
 // todo add update and delete tenant
@@ -16,10 +16,7 @@ export class TenantService {
     async createTenant(data: CreateTenantDto) {
         const { name, createdBy } = data;
 
-        // only admin can create a tenant, move to a guard later
-        if (createdBy.userType !== UserType.ADMIN) {
-            throw new Error("Only admin can create a tenant");
-        }
+        assertUserIsAdmin({ user: createdBy });
 
         const existingTenant = await prisma.tenant.findUnique({
             where: {
@@ -40,11 +37,10 @@ export class TenantService {
 
     async assignUserToTenant(data: AssignUserToTenantDto) {
         const { userId, tenantId, assignedBy } = data;
-        console.log(userId, tenantId, assignedBy);
 
         assertUserIsVerified({ user: assignedBy });
 
-        assertAdminAndTenant({ tenantId, user: assignedBy });
+        assertUserIsAdmin({ user: assignedBy });
 
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
@@ -62,12 +58,33 @@ export class TenantService {
         return updatedUser;
     }
 
+    async getTenantUsers(data: GetTenantUsersDto) {
+        const { tenantId, currentUser } = data;
+
+        assertUserIsVerified({ user: currentUser });
+
+        assertAdminOrTenant({ tenantId, user: currentUser });
+
+        const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+
+        if (!tenant) {
+            throw new Error("Tenant not found");
+        }
+
+        const users = await prisma.user.findMany({
+            where: { tenantId },
+            orderBy: { createdAt: "desc" },
+        });
+
+        return { tenant, users };
+    }
+
     async removeUserFromTenant(data: RemoveUserFromTenantDto) {
         const { userId, tenantId, removedBy } = data;
 
         assertUserIsVerified({ user: removedBy });
 
-        assertAdminAndTenant({ tenantId, user: removedBy });
+        assertAdminOrTenant({ tenantId, user: removedBy });
 
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
@@ -83,7 +100,7 @@ export class TenantService {
 
         const updatedUser = await prisma.user.update({
             where: { id: userId },
-            data: { tenantId: null },
+            data: { tenantId: null, teamId: null },
         });
 
         return updatedUser;
@@ -94,7 +111,7 @@ export class TenantService {
 
         assertUserIsVerified({ user: deletedBy });
 
-        assertAdmin(deletedBy);
+        assertUserIsAdmin({ user: deletedBy });
 
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
@@ -109,10 +126,11 @@ export class TenantService {
 
     async getTenants(data: GetTenantsByCurrentUserDto) {
         const { currentUser } = data;
+        assertUserIsAdmin({ user: currentUser });
 
         assertUserIsVerified({ user: currentUser });
 
-        assertAdminAndTenant({ tenantId: currentUser.tenantId!, user: currentUser });
+        assertAdminOrTenant({ tenantId: currentUser.tenantId!, user: currentUser });
 
         let tenants: Tenant[];
 
@@ -125,64 +143,16 @@ export class TenantService {
         return tenants;
     }
 
-    // todo: refine this, for now just testing to get all possible information for a tenant
     async getTenantById(tenantId: string, currentUser: User) {
         assertUserIsVerified({ user: currentUser });
 
-        assertAdminAndTenant({ tenantId, user: currentUser });
+        assertAdminOrTenant({ tenantId, user: currentUser });
 
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
             include: {
-                users: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        isVerified: true,
-                        userType: true,
-                        createdAt: true,
-                    },
-                },
-                teams: {
-                    include: {
-                        users: {
-                            select: {
-                                id: true,
-                                name: true,
-                                email: true,
-                            },
-                        },
-                        groups: {
-                            include: {
-                                userGroups: {
-                                    include: {
-                                        user: {
-                                            select: {
-                                                id: true,
-                                                name: true,
-                                                email: true,
-                                            },
-                                        },
-                                    },
-                                },
-                                groupRoles: {
-                                    include: {
-                                        role: {
-                                            include: {
-                                                rolePermissions: {
-                                                    include: {
-                                                        permission: true,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
+                users: true,
+                teams: true,
             },
         });
 
@@ -198,9 +168,7 @@ export class TenantService {
 
         assertUserIsVerified({ user: updatedBy });
 
-        if (updatedBy.userType !== UserType.ADMIN) {
-            throw new Error("Unauthorized: Only admins can update tenants");
-        }
+        assertUserIsAdmin({ user: updatedBy });
 
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },

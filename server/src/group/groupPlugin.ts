@@ -1,6 +1,5 @@
 import cookie from "@elysiajs/cookie";
 import Elysia from "elysia";
-import { z } from "zod";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 import { GroupService } from "./groupService";
 import {
@@ -44,20 +43,6 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             body: CreateGroup,
         }
     )
-    // get user groups
-    .get("/user", async ({ user, status }) => {
-        try {
-            if (!user) return status(401, { message: "Unauthorized" });
-
-            const groups = await groupService.getUserGroups(user);
-
-            return status(200, { message: "User groups fetched successfully", data: groups });
-        } catch (error: any) {
-            return status(400, {
-                message: error.message ?? "An error occurred",
-            });
-        }
-    })
     // update a group
     .put(
         "/:groupId",
@@ -86,7 +71,7 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             body: UpdateGroup,
         }
     )
-    // get all groups of a team
+    // get all groups in a team
     .get(
         "/team/:teamId",
         async ({ params, user, status }) => {
@@ -111,14 +96,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
     )
     // add a user to a group
     .post(
-        "/:groupId/user",
-        async ({ params, body, user, status }) => {
+        "/:groupId/user/:userId/add",
+        async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
                 const userGroup = await groupService.addUserToGroup({
                     groupId: params.groupId,
-                    ...body,
+                    userId: params.userId,
                     addedBy: user,
                 });
 
@@ -133,8 +118,7 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             }
         },
         {
-            params: GroupIdParams,
-            body: AddUserToGroup,
+            params: GroupUserIdParams,
         }
     )
     // remove a user from a group
@@ -163,29 +147,7 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             params: GroupUserIdParams,
         }
     )
-    // get all members of a group
-    .get(
-        "/:groupId/members",
-        async ({ params, user, status }) => {
-            try {
-                if (!user) return status(401, { message: "Unauthorized" });
 
-                const members = await groupService.getGroupMembers({
-                    groupId: params.groupId,
-                    currentUser: user,
-                });
-
-                return status(200, { data: members });
-            } catch (error: any) {
-                return status(400, {
-                    message: error.message ?? "An error occurred",
-                });
-            }
-        },
-        {
-            params: GroupIdParams,
-        }
-    )
     // get all roles of a group
     .get(
         "/:groupId/roles",
@@ -217,14 +179,14 @@ export const groupPlugin = new Elysia({ prefix: "/group" })
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
-                const result = await groupService.deleteGroup({
+                await groupService.deleteGroup({
                     groupId: params.groupId,
                     deletedBy: user,
                 });
 
                 return status(200, {
-                    message: result.message,
-                    data: result,
+                    message: "Group deleted successfully",
+                    success: true,
                 });
             } catch (error: any) {
                 return status(400, {

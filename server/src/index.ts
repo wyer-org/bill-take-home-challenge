@@ -10,6 +10,7 @@ import { tenantPlugin } from "./tenants/tenantPlugin";
 import { groupPlugin } from "./group/groupPlugin";
 import { rolePlugin } from "./role/rolePlugin";
 import { permissionPlugin } from "./permissions/permissionPlugin";
+import { financialsPlugin } from "./financials/financialsPlugin";
 
 const app = new Elysia({ prefix: "api/v1" })
     .use(cookie())
@@ -21,11 +22,12 @@ const app = new Elysia({ prefix: "api/v1" })
     )
     .use(authPlugin)
     .use(userPlugin)
-    .use(teamPlugin)
     .use(tenantPlugin)
+    .use(teamPlugin)
     .use(groupPlugin)
     .use(permissionPlugin)
     .use(rolePlugin)
+    .use(financialsPlugin)
     .listen(3000);
 
 console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);

@@ -7,6 +7,7 @@ import {
     TeamIdParams,
     TenantIdParams,
     UpdateTeamBody,
+    AssignUserToTeam,
 } from "../common/types/tenant-team";
 
 const teamService = new TeamService();
@@ -56,9 +57,9 @@ export const teamPlugin = new Elysia({ prefix: "/team" })
         }
     )
 
-    // Get individual team
+    // Get individual team and it's mambers
     .get(
-        "/:teamId/details",
+        "/details/:teamId",
         async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
@@ -75,6 +76,32 @@ export const teamPlugin = new Elysia({ prefix: "/team" })
         },
         {
             params: TeamIdParams,
+        }
+    )
+
+    // Assign user to team
+    .post(
+        "/:teamId/:userId/assign",
+        async ({ params, user, status }) => {
+            try {
+                if (!user) return status(401, { message: "Unauthorized" });
+
+                const assignedUser = await teamService.assignUserToTeam({
+                    userId: params.userId,
+                    teamId: params.teamId,
+                    assignedBy: user,
+                });
+
+                return status(200, {
+                    message: "User assigned to team successfully",
+                    data: assignedUser,
+                });
+            } catch (error: any) {
+                return status(400, { message: error.message });
+            }
+        },
+        {
+            params: AssignUserToTeam,
         }
     )
 

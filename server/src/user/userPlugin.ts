@@ -21,29 +21,6 @@ export const userPlugin = new Elysia({ prefix: "/user" })
 
         return { data: loggedInUser };
     })
-
-    // Get all users in tenant (admin only)
-    .get(
-        "/tenant/:tenantId",
-        async ({ params, user, status }) => {
-            try {
-                if (!user) return status(401, { message: "Unauthorized" });
-
-                const users = await userService.getAllUsers({
-                    tenantId: params.tenantId,
-                    currentUser: user,
-                });
-
-                return status(200, { data: users });
-            } catch (error: any) {
-                return status(400, { message: error.message });
-            }
-        },
-        {
-            params: z.object({ tenantId: z.string() }),
-        }
-    )
-
     // Update user profile
     .put(
         "/profile",
@@ -70,35 +47,6 @@ export const userPlugin = new Elysia({ prefix: "/user" })
             body: UpdateUserProfile,
         }
     )
-
-    // Update user by ID (admin only)
-    .put(
-        "/:userId",
-        async ({ params, body, user, status }) => {
-            try {
-                if (!user) return status(401, { message: "Unauthorized" });
-
-                const updatedUser = await userService.updateUserProfile({
-                    userId: params.userId,
-                    name: body.name,
-                    email: body.email,
-                    updatedBy: user,
-                });
-
-                return status(200, {
-                    message: "User updated successfully",
-                    data: updatedUser,
-                });
-            } catch (error: any) {
-                return status(400, { message: error.message });
-            }
-        },
-        {
-            params: z.object({ userId: z.string() }),
-            body: UpdateUserProfile,
-        }
-    )
-
     // Update user tenant (admin only)
     .put(
         "/:userId/tenant",

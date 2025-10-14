@@ -4,6 +4,7 @@ import { LoginUser, RegisterUser, TokenQueryParams, VerifyUser } from "../common
 import { AuthService } from "./authService";
 import { UserService } from "../user/userService";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
+import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
 const authService = new AuthService();
 const userService = new UserService();
@@ -66,7 +67,11 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         async ({ query: { token }, cookie, status }) => {
             const { isValid, user } = await authService.validateMagicLink({ token });
 
-            if (!isValid || !user) return status(401, { message: "Unauthorized: contact admin" });
+            if (!isValid) return status(401, { message: "Unauthorized: invalid/expired token" });
+
+            if (!user) return status(404, { message: "User not found" });
+
+            assertUserIsVerified({ user });
 
             const session = await authService.createSession({ userId: user?.id });
 

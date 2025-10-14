@@ -23,50 +23,15 @@ export class UserService {
             include: {
                 tenant: true,
                 team: true,
+                userGroups: {
+                    include: {
+                        group: true,
+                    },
+                },
             },
         });
 
         return existingUser;
-    }
-
-    async getAllUsers({ tenantId, currentUser }: { tenantId: string; currentUser: User }) {
-        if (currentUser.userType !== UserType.ADMIN) {
-            throw new Error("Unauthorized: Only admins can view all users");
-        }
-
-        // very expensive query, not recommended for production
-        // todo: I should refinitelky remove or refine this, for not just testing
-        const users = await prisma.user.findMany({
-            where: { tenantId },
-            include: {
-                tenant: true,
-                team: true,
-                userGroups: {
-                    include: {
-                        group: {
-                            include: {
-                                groupRoles: {
-                                    include: {
-                                        role: {
-                                            include: {
-                                                rolePermissions: {
-                                                    include: {
-                                                        permission: true,
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            orderBy: { createdAt: "desc" },
-        });
-
-        return users;
     }
 
     async updateUserProfile(data: UpdateUserProfileDto) {
