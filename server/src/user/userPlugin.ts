@@ -27,6 +27,12 @@ export const userPlugin = new Elysia({ prefix: "/user" })
         const users = await userService.getUnverifiedUsers();
         return users;
     })
+    // get verified users
+    .get("/verified", async ({ user }) => {
+        if (!user) return status(401, { message: "Unauthorized" });
+        const users = await userService.getVerifiedUsers();
+        return users;
+    })
     // Verify user by admin
     .post(
         "/verify",

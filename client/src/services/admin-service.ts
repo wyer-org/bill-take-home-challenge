@@ -6,6 +6,11 @@ export async function getUnverifiedUsers() {
     return response.data;
 }
 
+export async function getVerifiedUsers() {
+    const response = await api.get<User[]>("/user/verified");
+    return response.data;
+}
+
 export async function verifyUser({ email }: { email: string }) {
     const response = await api.post<{ message: string; success: boolean; user: User }>(
         "/user/verify",

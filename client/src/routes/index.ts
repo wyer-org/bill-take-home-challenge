@@ -7,8 +7,10 @@ import VerifyMagicLink from "../pages/auth/VerifyMagicLink";
 import { AuthContextStateActions } from "../context/AuthProvider";
 import { UserType } from "../types/user.types";
 import AdminDashboard from "../pages/dashboard/admin/AdminDashboard";
-import AdminVerifyUsers from "../pages/dashboard/admin/AdminVerifyUsers";
+import AdminVerifyUsers from "../pages/dashboard/admin/AdminUnverifiedUsers";
 import AdminPermissions from "../pages/dashboard/admin/AdminPermissions";
+import AdminTenant from "../pages/dashboard/admin/AdminTenant";
+import AdminVerifiedUsers from "../pages/dashboard/admin/AdminVerifiedUsers";
 
 type Context = {
     auth: AuthContextStateActions;
@@ -66,16 +68,28 @@ const rootAdminDashboard = createRoute({
     component: AdminDashboard,
 });
 
+const adminUnverifiedUsersRoute = createRoute({
+    getParentRoute: () => rootAdminDashboard,
+    path: "users/unverified",
+    component: AdminVerifyUsers,
+});
+
 const adminUsersRoute = createRoute({
     getParentRoute: () => rootAdminDashboard,
-    path: "users",
-    component: AdminVerifyUsers,
+    path: "users/verified",
+    component: AdminVerifiedUsers,
 });
 
 const adminPermissionsRoute = createRoute({
     getParentRoute: () => rootAdminDashboard,
     path: "permissions",
     component: AdminPermissions,
+});
+
+const adminTenantsRoute = createRoute({
+    getParentRoute: () => rootAdminDashboard,
+    path: "tenants",
+    component: AdminTenant,
 });
 
 export const router = createRouter({
@@ -87,7 +101,9 @@ export const router = createRouter({
         verifyMagicLinkRoute,
         rootAdminDashboard,
         adminUsersRoute,
+        adminUnverifiedUsersRoute,
         adminPermissionsRoute,
+        adminTenantsRoute,
     ]),
     context: {} as Context,
 });

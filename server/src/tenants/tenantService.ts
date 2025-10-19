@@ -25,14 +25,22 @@ export class TenantService {
         });
 
         if (existingTenant) {
-            throw new Error("Tenant with this name already exists");
+            return {
+                success: false,
+                message: "Tenant with this name already exists",
+                tenant: null,
+            };
         }
 
         const tenant = await prisma.tenant.create({
             data: { name },
         });
 
-        return tenant;
+        return {
+            success: true,
+            message: "Tenant created successfully",
+            tenant,
+        };
     }
 
     async assignUserToTenant(data: AssignUserToTenantDto) {
@@ -45,17 +53,33 @@ export class TenantService {
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
         if (!tenant) {
-            throw new Error("Tenant not found");
+            return {
+                success: false,
+                message: "Tenant not found",
+                tenant,
+                user: null,
+            };
         }
 
-        const userToAssign = await prisma.user.findUnique({ where: { id: userId } });
-        if (!userToAssign) {
-            throw new Error("User not found");
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (!user) {
+            return {
+                success: false,
+                message: "User not found",
+                tenant,
+                user,
+            };
         }
 
         const updatedUser = await prisma.user.update({ where: { id: userId }, data: { tenantId } });
 
-        return updatedUser;
+        return {
+            success: true,
+            message: "User assigned to tenant successfully",
+            tenant,
+            user: updatedUser,
+        };
     }
 
     async getTenantUsers(data: GetTenantUsersDto) {
@@ -116,12 +140,16 @@ export class TenantService {
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
 
         if (!tenant) {
-            throw new Error("Tenant not found");
+            return { success: false, tenant: null, message: "Tenant not found" };
         }
 
         const deletedTenant = await prisma.tenant.delete({ where: { id: tenantId } });
 
-        return deletedTenant;
+        return {
+            success: true,
+            tenant: deletedTenant,
+            message: `Tenant deleted successfully : ${deletedTenant.name}`,
+        };
     }
 
     async getTenants(data: GetTenantsByCurrentUserDto) {

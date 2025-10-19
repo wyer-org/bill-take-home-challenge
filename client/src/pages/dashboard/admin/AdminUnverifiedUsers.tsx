@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { User } from "../../../types/user.types";
 import { notify } from "../../../components/Toast";
 
-function AdminVerifyUsers() {
+function AdminUnverifiedUsers() {
     const { data: usersFetched, isLoading: isFetchingUnverifiedUsers } = useGetUnverifiedUsers();
     const { mutateAsync: verifyUser } = useVerifyUser();
     const [users, setUsers] = useState<User[]>([]);
@@ -26,13 +26,13 @@ function AdminVerifyUsers() {
         }
     }, [users, usersFetched]);
 
-    if (isFetchingUnverifiedUsers) return <span>loading...</span>;
-
-    if (users?.length === 0) return <div>No unverified users found </div>;
-
     return (
-        <div className="flex flex-col items-center w-[95%] md:w-[400px] mx-auto gap-4 ">
+        <div className="flex flex-col items-center w-[95%] md:w-[420px] mx-auto gap-4 ">
             <h1 className="text-xl font-bold border-b border-gray-400">Unverified Users</h1>
+
+            {isFetchingUnverifiedUsers && <span>loading...</span>}
+            {users?.length === 0 && <div>No users found </div>}
+
             <ul className="w-full flex flex-col p-2">
                 {users?.map((user) => (
                     <li
@@ -54,4 +54,4 @@ function AdminVerifyUsers() {
     );
 }
 
-export default AdminVerifyUsers;
+export default AdminUnverifiedUsers;

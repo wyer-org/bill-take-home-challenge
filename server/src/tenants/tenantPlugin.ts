@@ -25,12 +25,12 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
-                const tenant = await tenantService.createTenant({
+                const { message, success, tenant } = await tenantService.createTenant({
                     name: body.name,
                     createdBy: user,
                 });
 
-                return status(201, { message: "Tenant created successfully", data: tenant });
+                return status(201, { message, success, tenant });
             } catch (error: any) {
                 return status(400, { message: error.message });
             }
@@ -47,7 +47,7 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
 
             const tenants = await tenantService.getTenants({ currentUser: user });
 
-            return status(200, { message: "Tenants fetched successfully", data: tenants });
+            return status(200, { success: true, message: "Tenants fetched successfully", tenants });
         } catch (error: any) {
             return status(400, { message: error.message });
         }
@@ -106,16 +106,13 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
-                const assignedUser = await tenantService.assignUserToTenant({
+                const result = await tenantService.assignUserToTenant({
                     userId: params.userId,
                     tenantId: params.tenantId,
                     assignedBy: user,
                 });
 
-                return status(200, {
-                    message: "User assigned to tenant successfully",
-                    data: assignedUser,
-                });
+                return status(200, { ...result });
             } catch (error: any) {
                 return status(400, { message: error.message });
             }
@@ -171,17 +168,18 @@ export const tenantPlugin = new Elysia({ prefix: "/tenant" })
     )
 
     // Delete tenant
-    .post(
+    .delete(
         "/:tenantId/delete",
         async ({ params, user, status }) => {
             try {
                 if (!user) return status(401, { message: "Unauthorized" });
 
-                const deletedTenant = await tenantService.deleteTenant({
+                const result = await tenantService.deleteTenant({
                     tenantId: params.tenantId,
                     deletedBy: user,
                 });
-                return status(200, { message: "Tenant deleted successfully", data: deletedTenant });
+
+                return status(200, { ...result });
             } catch (error: any) {
                 return status(400, { message: error.message });
             }
