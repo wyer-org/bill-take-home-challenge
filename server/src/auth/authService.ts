@@ -7,6 +7,7 @@ import {
     Time,
     isExpired,
 } from "../utils/timeUtil";
+import { assertUserIsAdmin } from "../guards/assertions";
 
 export class AuthService {
     async registerUser(user: RegisterUserDto) {
@@ -17,7 +18,7 @@ export class AuthService {
         });
 
         if (existingUser) {
-            return null;
+            return { user: null, success: false, message: "User already exists" };
         }
 
         const newUser = await prisma.user.create({
@@ -27,7 +28,7 @@ export class AuthService {
             },
         });
 
-        return newUser;
+        return { user: newUser, success: true, message: "User successfully registerd" };
     }
 
     async createUserMagicLink({ userId }: { userId: string }) {
@@ -39,6 +40,13 @@ export class AuthService {
                 expiresAt,
             },
         });
+
+        if (!magicLink) {
+            return {
+                success: false,
+                authUrl: "",
+            };
+        }
 
         const authUrl = `${process.env.CLIENT_URL}/auth/verify?token=${magicLink.id}`;
 
@@ -73,42 +81,26 @@ export class AuthService {
             include: { user: true },
         });
 
-        if (!magicLink) return { isValid: false, user: null };
+        if (!magicLink) return { isValid: false, user: null, message: "Token is expired" };
+
+        if (!magicLink.user.isVerified) {
+            return {
+                isValid: false,
+                user: magicLink?.user,
+                message: "User is not verified. Contact Admin",
+            };
+        }
 
         if (isExpired(magicLink.expiresAt)) {
-            return { isValid: false, user: null };
+            return {
+                isValid: false,
+                user: magicLink.user,
+                message: "Token is expired. Please renew",
+            };
         }
 
         await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
         return { isValid: true, user: magicLink.user };
-    }
-
-    async validateIsUserAdmin(user: User) {
-        return { isAdmin: user.userType === UserType.ADMIN, user };
-    }
-
-    // only use this function is the entiy performing the action is an admin user
-    //is admin is just to ensure readability and to tell developer not to call function randomly
-    async verifyUserByAdmin({
-        email,
-        isVerifiedByAdmin,
-    }: {
-        email: string;
-        isVerifiedByAdmin: boolean;
-    }) {
-        if (!isVerifiedByAdmin) {
-            return { isVerified: false, user: null };
-        }
-
-        const user = await prisma.user.findUnique({ where: { email } });
-
-        if (!user) {
-            return { isVerified: false, user: null };
-        }
-
-        await prisma.user.update({ where: { id: user.id }, data: { isVerified: true } });
-
-        return { isVerified: true, user };
     }
 }

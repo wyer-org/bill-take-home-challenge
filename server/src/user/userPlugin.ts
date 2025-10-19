@@ -1,8 +1,8 @@
-import { Elysia } from "elysia";
+import { Elysia, status } from "elysia";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 import { cookie } from "@elysiajs/cookie";
 import { UserService } from "./userService";
-import { UpdateUserProfile } from "../common/types/user";
+import { UpdateUserProfile, VerifyUser } from "../common/types/user";
 import { z } from "zod";
 
 const userService = new UserService();
@@ -19,8 +19,29 @@ export const userPlugin = new Elysia({ prefix: "/user" })
 
         if (!loggedInUser) return status(404, { message: "User not found" });
 
-        return { data: loggedInUser };
+        return loggedInUser;
     })
+    // get unverified users
+    .get("/unverified", async ({ user }) => {
+        if (!user) return status(401, { message: "Unauthorized" });
+        const users = await userService.getUnverifiedUsers();
+        return users;
+    })
+    // Verify user by admin
+    .post(
+        "/verify",
+        async ({ user, status, body }) => {
+            if (!user) return status(401, { message: "Unauthorized" });
+
+            const result = await userService.verifyUser({
+                email: body.email,
+                verifiedBy: user,
+            });
+
+            return result;
+        },
+        { body: VerifyUser }
+    )
     // Update user profile
     .put(
         "/profile",

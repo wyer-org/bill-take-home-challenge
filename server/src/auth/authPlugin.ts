@@ -17,23 +17,18 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         "/register",
         async ({ body, status }) => {
             const parsedBody = RegisterUser.parse(body);
-            const user = await authService.registerUser(parsedBody);
+            const { user, message, success } = await authService.registerUser(parsedBody);
 
-            if (!user) {
-                return status(400, {
-                    message: "User already exists",
-                    data: null,
-                });
+            if (!user || !success) {
+                return { success, data: null, message };
             }
 
             const authUrl = await authService.createUserMagicLink({ userId: user.id });
 
             return status(200, {
-                message: "Register successfull",
-                data: {
-                    user,
-                    authUrl,
-                },
+                message,
+                success,
+                authUrl,
             });
         },
         { body: RegisterUser }
@@ -44,19 +39,21 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
         async ({ body, status }) => {
             const user = await userService.getUserByEmail(body);
 
-            if (!user) return status(404, { message: "User not found", data: null });
+            if (!user) return { success: false, message: "User not found", data: null };
 
             if (!user?.isVerified)
-                return status(401, { message: "User not verified, contact admin" });
+                return { success: false, message: "User not verified, contact admin", data: null };
 
             const authUrl = await authService.createUserMagicLink({ userId: user.id });
 
+            if (!authUrl) {
+                return { success: false, message: "Error generating magic link", data: null };
+            }
+
             return status(200, {
                 message: "Login initialted successfully",
-                data: {
-                    user,
-                    authUrl,
-                },
+                success: true,
+                authUrl,
             });
         },
         { body: LoginUser }
@@ -65,13 +62,11 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
     .post(
         "/login",
         async ({ query: { token }, cookie, status }) => {
-            const { isValid, user } = await authService.validateMagicLink({ token });
+            const { isValid, user, message } = await authService.validateMagicLink({ token });
 
-            if (!isValid) return status(401, { message: "Unauthorized: invalid/expired token" });
+            if (!isValid) return { success: false, message, user };
 
-            if (!user) return status(404, { message: "User not found" });
-
-            assertUserIsVerified({ user });
+            if (!user) return { success: false, message, user };
 
             const session = await authService.createSession({ userId: user?.id });
 
@@ -82,7 +77,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
             return {
                 success: true,
                 message: "User loged in successfully",
-                data: user,
+                user,
             };
         },
         { query: TokenQueryParams }
@@ -98,25 +93,4 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
             success: true,
             message: "Logout successfully",
         };
-    })
-    // Verify user by admin
-    .post(
-        "/verify-user",
-        async ({ user, status, body }) => {
-            if (!user) return status(401, { message: "Unauthorized" });
-
-            const { isAdmin } = await authService.validateIsUserAdmin(user);
-
-            if (!isAdmin) return status(401, { message: "Unauthorized." });
-
-            const { isVerified, user: verifiedUser } = await authService.verifyUserByAdmin({
-                email: body.email,
-                isVerifiedByAdmin: isAdmin,
-            });
-
-            if (!isVerified) return status(400, { message: "User not verified" });
-
-            return { isVerified, user: verifiedUser };
-        },
-        { body: VerifyUser }
-    );
+    });

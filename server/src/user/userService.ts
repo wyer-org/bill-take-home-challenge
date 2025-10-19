@@ -1,6 +1,7 @@
 import { UpdateUserProfileDto } from "../common/types/user";
 import { prisma } from "../db/client";
 import { User, UserType } from "@prisma/client";
+import { assertUserIsAdmin } from "../guards/assertions";
 
 export class UserService {
     async getUserByEmail({ email }: { email: string }) {
@@ -32,6 +33,11 @@ export class UserService {
         });
 
         return existingUser;
+    }
+
+    async getUnverifiedUsers() {
+        const users = await prisma.user.findMany({ where: { isVerified: false } });
+        return users;
     }
 
     async updateUserProfile(data: UpdateUserProfileDto) {
@@ -129,5 +135,21 @@ export class UserService {
         });
 
         return true;
+    }
+
+    async verifyUser({ email, verifiedBy }: { email: string; verifiedBy: User }) {
+        assertUserIsAdmin({ user: verifiedBy });
+
+        const user = await prisma.user.findUnique({ where: { email } });
+
+        if (!user) {
+            return { success: false, user: null, message: "User not found" };
+        }
+
+        await prisma.user.update({ where: { id: user.id }, data: { isVerified: true } });
+
+        const updatedUser = await prisma.user.findUnique({ where: { email } });
+
+        return { success: true, user, message: "User successfully verified" };
     }
 }

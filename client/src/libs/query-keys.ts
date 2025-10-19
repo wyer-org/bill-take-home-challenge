@@ -1,0 +1,10 @@
+export const MutationKeys = {
+    REGISTER_USER: "REGISTER_USER",
+    INITI_USER_LOGIN: "INITI_USER_LOGIN",
+    VERIFY_USER: "VERIFY_USER",
+};
+
+export const QueryKeys = {
+    USER_PROFILE: "USER_PROFILE",
+    GET_UNVERIFIED_USERS: "GET_UNVERIFIED_USERS",
+};
