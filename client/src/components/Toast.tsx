@@ -14,7 +14,7 @@ export function CustomToast(props: CustomToastProps) {
     const { title, description, button, id } = props;
 
     return (
-        <div className="flex rounded-lg bg-white shadow-lg ring-1 ring-black/5 w-full md:max-w-[364px] items-center p-4 border border-blue-300">
+        <div className="flex rounded-lg bg-white shadow-lg ring-1 ring-black/5 w-full md:min-w-[364px] items-center p-4 border border-blue-300">
             <div className="flex flex-1 items-center">
                 <div className="w-full">
                     <p className="text-sm font-medium text-gray-900">{title}</p>

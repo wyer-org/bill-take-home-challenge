@@ -16,3 +16,10 @@ export const adminTabs = [
         title: "Verified users",
     },
 ];
+
+export const userTabs = [
+    {
+        path: "/user/dashboard/teams",
+        title: "Teams",
+    },
+];

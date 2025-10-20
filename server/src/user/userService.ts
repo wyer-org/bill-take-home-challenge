@@ -38,7 +38,7 @@ export class UserService {
     async getUnverifiedUsers() {
         const users = await prisma.user.findMany({
             where: { isVerified: false, userType: { not: UserType.ADMIN } },
-            orderBy: { name: "asc" },
+            orderBy: { updatedAt: "desc" },
         });
         return users;
     }
@@ -46,7 +46,7 @@ export class UserService {
     async getVerifiedUsers() {
         const users = await prisma.user.findMany({
             where: { isVerified: true, userType: { not: UserType.ADMIN } },
-            orderBy: { name: "asc" },
+            orderBy: { updatedAt: "desc" },
         });
         return users;
     }

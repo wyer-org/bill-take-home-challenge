@@ -1,9 +1,9 @@
 import { Outlet, useNavigate } from "@tanstack/react-router";
-import { adminTabs } from "../../../store/tabs-store";
-import MainLayout from "../../../layouts/MainLayout";
 import Button from "../../../components/Button";
+import MainLayout from "../../../layouts/MainLayout";
+import { userTabs } from "../../../store/tabs-store";
 
-function AdminDashboard() {
+function UserDashboard() {
     const navigate = useNavigate();
 
     function handleTabClicked(path: string) {
@@ -13,7 +13,7 @@ function AdminDashboard() {
         <MainLayout>
             <div className="w-full flex flex-col gap-3 mt-3">
                 <div className="flex justify-center gap-2">
-                    {adminTabs.map((tab, index) => (
+                    {userTabs.map((tab, index) => (
                         <Button
                             key={index}
                             className=""
@@ -28,4 +28,4 @@ function AdminDashboard() {
     );
 }
 
-export default AdminDashboard;
+export default UserDashboard;

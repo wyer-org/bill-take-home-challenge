@@ -10,6 +10,9 @@ import AdminVerifyUsers from "../pages/dashboard/admin/AdminUnverifiedUsers";
 import AdminPermissions from "../pages/dashboard/admin/AdminPermissions";
 import AdminTenant from "../pages/dashboard/admin/AdminTenant";
 import AdminVerifiedUsers from "../pages/dashboard/admin/AdminVerifiedUsers";
+import UserDashboard from "../pages/dashboard/user/UserDashboard";
+import UserTeams from "../pages/dashboard/user/UserTeams";
+import { UserType } from "../types/user.types";
 
 type Context = {
     auth: AuthContextStateActions;
@@ -52,6 +55,17 @@ const rootAdminDashboard = createRoute({
     getParentRoute: () => rootRoute,
     path: "admin/dashboard",
     component: AdminDashboard,
+    beforeLoad: async ({ context }) => {
+        const { auth } = context as Context;
+
+        if (!auth.isLoggedIn) {
+            throw redirect({ to: "/auth/login/init" });
+        }
+
+        if (auth.user?.userType !== UserType.ADMIN) {
+            throw redirect({ to: "/user/dashboard" });
+        }
+    },
 });
 
 const adminDashboardIndexRoute = createRoute({
@@ -86,6 +100,37 @@ const adminTenantsRoute = createRoute({
     component: AdminTenant,
 });
 
+const rootUserDashboard = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "user/dashboard",
+    component: UserDashboard,
+    beforeLoad: async ({ context }) => {
+        const { auth } = context as Context;
+
+        if (!auth.isLoggedIn) {
+            throw redirect({ to: "/auth/login/init" });
+        }
+
+        if (auth.user?.userType !== UserType.USER) {
+            throw redirect({ to: "/admin/dashboard" });
+        }
+    },
+});
+
+const userDashboardIndexRoute = createRoute({
+    getParentRoute: () => rootUserDashboard,
+    path: "/",
+    beforeLoad: async () => {
+        throw redirect({ to: "/user/dashboard/teams" });
+    },
+});
+
+const userTeamsRoute = createRoute({
+    getParentRoute: () => rootUserDashboard,
+    path: "teams",
+    component: UserTeams,
+});
+
 export const router = createRouter({
     routeTree: rootRoute.addChildren([
         indexRoute,
@@ -99,6 +144,9 @@ export const router = createRouter({
         adminUnverifiedUsersRoute,
         adminPermissionsRoute,
         adminTenantsRoute,
+        rootUserDashboard,
+        userDashboardIndexRoute,
+        userTeamsRoute,
     ]),
     context: {} as Context,
 });
