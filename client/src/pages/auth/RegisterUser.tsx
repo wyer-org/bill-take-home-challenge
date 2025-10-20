@@ -1,15 +1,14 @@
 import ErrorMessage from "../../components/ErrorMessage";
 import FormInput from "../../components/FormInput";
-import { useAuth } from "../../hooks/useAuth";
 import { useCustomForm } from "../../hooks/useCustomForm";
 import AuthLayout from "../../layouts/AuthLayout";
 import { validateIsEmail } from "../../libs/validation";
 import { RegisterUserDto } from "../../types/user.types";
 import { Link } from "@tanstack/react-router";
 import { notify } from "../../components/Toast";
+import { useRegisterUserMutation } from "../../hooks/useAuth";
 
 function RegisterUser() {
-    const { useRegisterUserMutation } = useAuth();
     const { mutateAsync: registerUser, error, isPending } = useRegisterUserMutation();
     const {
         register,

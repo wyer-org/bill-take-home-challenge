@@ -1,6 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { MutationKeys } from "../libs/query-keys";
-import { initUserLogin, registerUser, verifyMagicLink } from "../services/auth-service";
+import { initUserLogin, logoutUser, registerUser, verifyMagicLink } from "../services/auth-service";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthProvider";
+import { useNavigate } from "@tanstack/react-router";
 
 export function useRegisterUserMutation() {
     return useMutation({
@@ -23,10 +26,23 @@ export function useVerifyMagicLinkMutation() {
     });
 }
 
+export function useLogoutUser() {
+    const { refetchUser } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationKey: [MutationKeys.LOGOUT_USER],
+        mutationFn: logoutUser,
+
+        onSuccess: async () => {
+            await refetchUser();
+            navigate({ to: "/", replace: true });
+        },
+
+        onError: (error) => console.error("Logout failed:", error),
+    });
+}
+
 export function useAuth() {
-    return {
-        useRegisterUserMutation,
-        useInitLoginUserMutation,
-        useVerifyMagicLinkMutation,
-    };
+    return useContext(AuthContext);
 }

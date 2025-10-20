@@ -1,7 +1,7 @@
 import AuthLayout from "../../layouts/AuthLayout";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useVerifyMagicLinkMutation } from "../../hooks/useAuth";
+import { useAuth, useVerifyMagicLinkMutation } from "../../hooks/useAuth";
 import { notify } from "../../components/Toast";
 
 function VerifyMagicLink() {
@@ -9,6 +9,7 @@ function VerifyMagicLink() {
     const { mutateAsync: verifyMagicLink, isPending } = useVerifyMagicLinkMutation();
     const { token } = useSearch({ from: "/auth/verify" });
     const [message, setMessage] = useState("");
+    const { refetchUser } = useAuth();
 
     useEffect(() => {
         if (isPending) return;
@@ -35,7 +36,11 @@ function VerifyMagicLink() {
                 if (result?.success) {
                     notify({ title: "Success!!", description: result.message });
                     setMessage(result.message || "Success");
-                    setTimeout(() => navigate({ to: "/" }), 3000);
+
+                    setTimeout(async () => {
+                        await refetchUser();
+                        navigate({ to: "/" });
+                    }, 1500);
                 }
             } catch {
                 notify({ title: "Error", description: "An error occured" });

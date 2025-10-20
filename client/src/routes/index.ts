@@ -5,7 +5,6 @@ import RegisterUser from "../pages/auth/RegisterUser";
 import InitLoginUser from "../pages/auth/InitLoginUser";
 import VerifyMagicLink from "../pages/auth/VerifyMagicLink";
 import { AuthContextStateActions } from "../context/AuthProvider";
-import { UserType } from "../types/user.types";
 import AdminDashboard from "../pages/dashboard/admin/AdminDashboard";
 import AdminVerifyUsers from "../pages/dashboard/admin/AdminUnverifiedUsers";
 import AdminPermissions from "../pages/dashboard/admin/AdminPermissions";
@@ -23,19 +22,6 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: "/",
-    beforeLoad: async ({ context }) => {
-        const { auth } = context as Context;
-
-        const { isLoggedIn, isLoading, user } = auth;
-
-        if (isLoading) return;
-
-        if (!isLoggedIn) throw redirect({ to: "/auth/login/init" });
-
-        if (user?.userType === UserType.ADMIN) throw redirect({ to: "/admin/dashboard" });
-
-        throw redirect({ to: "/user/dashboard" });
-    },
 });
 
 const aboutRoute = createRoute({
@@ -66,6 +52,14 @@ const rootAdminDashboard = createRoute({
     getParentRoute: () => rootRoute,
     path: "admin/dashboard",
     component: AdminDashboard,
+});
+
+const adminDashboardIndexRoute = createRoute({
+    getParentRoute: () => rootAdminDashboard,
+    path: "/",
+    beforeLoad: async () => {
+        throw redirect({ to: "/admin/dashboard/users/unverified" });
+    },
 });
 
 const adminUnverifiedUsersRoute = createRoute({
@@ -100,6 +94,7 @@ export const router = createRouter({
         initLoginUserRoute,
         verifyMagicLinkRoute,
         rootAdminDashboard,
+        adminDashboardIndexRoute,
         adminUsersRoute,
         adminUnverifiedUsersRoute,
         adminPermissionsRoute,

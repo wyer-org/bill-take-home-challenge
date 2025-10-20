@@ -81,10 +81,9 @@ function AdminTenant() {
     useEffect(() => {
         if (!fetchedTenantsResponse) return;
 
-        const { message, success, tenants: fetchedTenants } = fetchedTenantsResponse;
+        const { success, tenants: fetchedTenants } = fetchedTenantsResponse;
 
         if (success && fetchedTenants) {
-            notify({ title: "Success", description: message });
             setTenants(fetchedTenants);
         }
     }, [fetchedTenantsResponse]);

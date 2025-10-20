@@ -5,6 +5,7 @@ import { AuthService } from "./authService";
 import { UserService } from "../user/userService";
 import { userFromCookieMiddleware } from "../middlewares/userFromCookieMiddleware";
 import { assertUserIsVerified } from "../guards/assertUserIsVerified";
+import { prisma } from "../db/client";
 
 const authService = new AuthService();
 const userService = new UserService();
@@ -70,9 +71,13 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
 
             const session = await authService.createSession({ userId: user?.id });
 
+            cookie.session.httpOnly = true;
+            cookie.session.sameSite = "lax";
+            cookie.session.path = "/";
             cookie.session.value = session.id;
-            cookie.session.httpOnly = process.env.NODE_ENV === "development";
             cookie.session.expires = session.expiresAt;
+
+            await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
             return {
                 success: true,

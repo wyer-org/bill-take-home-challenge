@@ -77,29 +77,25 @@ export class AuthService {
 
     async validateMagicLink({ token }: { token: string }) {
         const magicLink = await prisma.magicLink.findUnique({
-            where: { id: token, isUsed: false },
+            where: { id: token },
             include: { user: true },
         });
 
-        if (!magicLink) return { isValid: false, user: null, message: "Token is expired" };
+        if (!magicLink) {
+            return { isValid: false, user: null, message: "Invalid or expired token" };
+        }
 
-        if (!magicLink.user.isVerified) {
-            return {
-                isValid: false,
-                user: magicLink?.user,
-                message: "User is not verified. Contact Admin",
-            };
+        if (magicLink.isUsed) {
+            return { isValid: false, user: magicLink.user, message: "Token already used" };
         }
 
         if (isExpired(magicLink.expiresAt)) {
             return {
                 isValid: false,
                 user: magicLink.user,
-                message: "Token is expired. Please renew",
+                message: "Token expired. Please request a new one.",
             };
         }
-
-        await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
         return { isValid: true, user: magicLink.user };
     }

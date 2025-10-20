@@ -29,7 +29,7 @@ function InitLoginUser() {
                 notify({ title: "Success!!", description: result.message });
                 setTimeout(() => {
                     window.location.href = result.authUrl;
-                }, 3000);
+                }, 1500);
             }
         } catch (error: any) {
             console.error("Register error:", error);

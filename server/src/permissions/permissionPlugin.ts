@@ -20,7 +20,7 @@ export const permissionPlugin = new Elysia({ prefix: "/permission" })
 
             return status(201, {
                 message: "Permissions seeded successfully",
-                data: permissions,
+                permissions,
             });
         } catch (error: any) {
             return status(400, {
@@ -33,12 +33,10 @@ export const permissionPlugin = new Elysia({ prefix: "/permission" })
     .get("/", async ({ user, status }) => {
         try {
             if (!user) return status(401, { message: "Unauthorized" });
-            const permissions = await permissionService.getPermissions();
 
-            return status(200, {
-                message: "Permissions fetched successfully",
-                data: permissions,
-            });
+            const permissions = await permissionService.getPermissions({ currentUser: user });
+
+            return status(200, permissions);
         } catch (error: any) {
             return status(400, {
                 message: error.message ?? "An error occurred",

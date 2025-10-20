@@ -2,6 +2,7 @@ import { Action, Module, User, UserType } from "@prisma/client";
 import { prisma } from "../db/client";
 import { assertUserIsAdmin } from "../guards/assertions";
 import { CreatePermissionDto, SeedAdminPermissionsDto } from "../common/types/permission";
+import { assertUserIsVerified } from "../guards/assertUserIsVerified";
 
 export class PermissionService {
     async createPermission(data: CreatePermissionDto) {
@@ -23,7 +24,9 @@ export class PermissionService {
         return permission;
     }
 
-    async getPermissions() {
+    async getPermissions({ currentUser }: { currentUser: User }) {
+        assertUserIsVerified({ user: currentUser });
+
         const permissions = await prisma.permission.findMany({
             orderBy: [{ module: "asc" }, { action: "asc" }],
         });
