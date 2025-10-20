@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "../../../hooks/useAuth";
 import Button from "../../../components/Button";
 import ErrorMessage from "../../../components/ErrorMessage";
@@ -21,13 +21,10 @@ function UserTeams() {
 
     function handleCreateTeam() {}
 
-    useEffect(() => {
-        console.log(user);
-    }, [user]);
-
     return (
         <div className="flex flex-col items-center w-[95%] md:w-[400px] mx-auto gap-4 ">
             <h1 className="text-xl font-bold border-b border-gray-400">User team(s)</h1>
+
             {!user?.tenantId ? (
                 <div>User needs to belong to a tenant to create a team</div>
             ) : (
