@@ -80,7 +80,7 @@ export const authPlugin = new Elysia({ prefix: "/auth" })
             await prisma.magicLink.update({ where: { id: token }, data: { isUsed: true } });
 
             return {
-                success: true,
+                success: isValid,
                 message: "User loged in successfully",
                 user,
             };

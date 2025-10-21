@@ -22,6 +22,7 @@ function VerifyMagicLink() {
         async function handleVerify() {
             try {
                 const result = await verifyMagicLink(token);
+                console.log(result);
 
                 if (!result.success) {
                     notify({
