@@ -14,7 +14,7 @@ function InitLoginUser() {
         register,
         handleSubmit,
         formState: { errors },
-    } = useCustomForm<InitLoginUserDto>({ email: "admin@mail.com" });
+    } = useCustomForm<InitLoginUserDto>({ email: "" });
 
     async function handleInitUserLogin(formData: InitLoginUserDto) {
         try {

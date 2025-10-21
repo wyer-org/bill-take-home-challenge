@@ -14,7 +14,7 @@ function RegisterUser() {
         register,
         handleSubmit,
         formState: { errors },
-    } = useCustomForm<RegisterUserDto>({ email: "bill@mail.com", name: "bill yengo" });
+    } = useCustomForm<RegisterUserDto>({ email: "", name: "" });
 
     async function handleRegisterUser(formData: RegisterUserDto) {
         try {
